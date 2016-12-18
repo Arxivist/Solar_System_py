@@ -47,7 +47,7 @@ class planet:
         self.vel = norm(-a*sin(M0)*ua+b*cos(M0)*ub)*speed
 
 # initialize planets
-earth = planet(1.00000011*1.496e+11,0.1671022,0.00005,-11.26064,102.94719,100.46435, 5.972e24)
+earth = planet(1.00000011*1.496e+11,0.01671022,0.00005,-11.26064,102.94719,100.46435, 5.972e24)
 
 Earth_disp = sphere(pos = earth.pos,radius = earth.radius, material = materials.earth, make_trail=True)
 trail = curve(color=color.red)
