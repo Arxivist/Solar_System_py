@@ -1,0 +1,75 @@
+from visual import *
+#from numpy import *
+#from math import *
+
+
+#
+# Orbital Elements
+#
+# 0 - a (Semimajor axis, Au)
+# 1 - e (eccentricity)
+# 2 - i (incluniation, Deg)
+# 3 - omega (longitude of ascending node, Deg)
+# 4 - w (argument of periapsis, Deg)
+# 5 - M0 (true anomoly at epoch, longitude Jan 2000, deg )
+# 6 - Mass
+GAMMA = 6.67408e-11
+MASS_SUN = 1.989e30
+#step for procedural analysis
+DELTA = 100000
+
+class planet:
+    def __init__(self,a,e,i,omega,w,M0,mass):
+        self.a = a
+        self.e = e
+        self.i = i
+        self.omega = omega
+        self.w = w
+        self.M0 = M0
+        self.mass = mass
+        self.radius = mass/1e21*1000000
+        #find semiminor axis (b)
+        b = a*sqrt(1-pow(e,2))
+        #find vector associated with semimajor axis
+        va = vector(a*cos(i)*cos(w),a*cos(i)*sin(w),a*sin(i))
+        ua = va/mag(va)
+        #find unit vector associated with semiminor axis
+        #note, fix this later to add inclination, currently slightly off
+        vb = vector(b * cos(w-pi/2), b * sin(w-pi/2), 0)
+        ub = vb / mag(vb)
+        #calculate initial position
+        self.pos = vector(0+a*cos(M0)*ua.x+b*sin(M0)*ub.x,0+a*cos(M0)*ua.y+b*sin(M0)*ub.y,0+a*cos(M0)*ua.z+b*sin(M0)*ub.z)
+        # Calculate the initial velocity
+        # assumptions made: Orbiting Sun, with sun at centre of orbit
+        #Calculate speed using v=sqrt(G*M*(2/r-1/a)
+        speed = sqrt(GAMMA*MASS_SUN*(2/mag(self.pos)-1/a))
+        #velocity is perpindicular to orbital elliptacal. Take unit vector of velocity and multiply by speed to get initial velocity
+        self.vel = norm(-a*sin(M0)*ua+b*cos(M0)*ub)*speed
+
+# initialize planets
+earth = planet(1.00000011*1.496e+11,0.01671022,0.00005,-11.26064,102.94719,100.46435, 5.972e24)
+
+Earth_disp = sphere(pos = earth.pos,radius = earth.radius, material = materials.earth, make_trail=True)
+Sun = sphere(pos=(0,0,0),radius = earth.radius*10, color = color.orange, material = materials.emissive)
+
+# move the planets using calculations for gravits and sympletic euler methods
+for i in range (30000):
+    rate(100)
+    # use newtons equation for gravity, F = G*M1*M2/r^2
+    F = -1*norm(earth.pos)*(GAMMA * MASS_SUN*earth.mass/(pow(mag(earth.pos),2)))
+    #use F = M*A to find accelelration of planet
+    A = F/earth.mass
+    earth.vel += DELTA*A
+    earth.pos += DELTA * earth.vel
+    Earth_disp.pos = earth.pos
+    Earth_disp.make_trail = True
+
+
+print "test"
+print F
+print A
+
+
+
+
+
