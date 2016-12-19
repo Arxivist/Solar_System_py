@@ -45,12 +45,17 @@ class planet:
         speed = sqrt(GAMMA*MASS_SUN*(2/mag(self.pos)-1/a))
         #velocity is perpindicular to orbital elliptacal. Take unit vector of velocity and multiply by speed to get initial velocity
         self.vel = norm(-a*sin(M0)*ua+b*cos(M0)*ub)*speed
+        self.sphere = sphere(pos = self.pos,radius = self.radius, make_trail=True)
+        self.trail =curve(color=color.red)
 
-# initialize planets
-earth = planet(1.00000011*1.496e+11,0.01671022,0.00005,-11.26064,102.94719,100.46435, 5.972e24)
+lPlanets = []
+lPlanets.append(planet(1.00000011*1.496e+11,0.01671022,0.00005,-11.26064,102.94719,100.46435, 5.972e24))
+# initialize Earth
+earth = lPlanets[0]
+earth.sphere.material = materials.earth
 
-Earth_disp = sphere(pos = earth.pos,radius = earth.radius, material = materials.earth, make_trail=True)
-trail = curve(color=color.red)
+#Earth_disp = sphere(pos = earth.pos,radius = earth.radius, material = materials.earth, make_trail=True)
+#trail = curve(color=color.red)
 
 Sun = sphere(pos=(0,0,0),radius = earth.radius*10, color = color.orange, material = materials.emissive)
 
@@ -63,8 +68,8 @@ for i in range (30000):
     A = F/earth.mass
     earth.vel += DELTA*A
     earth.pos += DELTA * earth.vel
-    Earth_disp.pos = earth.pos
-    trail.append(pos=Earth_disp.pos)
+    earth.sphere.pos = earth.pos
+    earth.trail.append(pos=earth.sphere.pos)
 
 
 
