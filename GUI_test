@@ -1,12 +1,12 @@
 import Tkinter
-import tkMessageBox
+import numpy as np
 from visual import *
 
 top = Tkinter.Tk()
 GAMMA = 6.67408e-11
 MASS_SUN = 1.989e30
 # step for procedural analysis
-DELTA = 100000
+DELTA = 200000
 
 class planet:
     #
@@ -30,7 +30,20 @@ class planet:
         M0 = M0 * pi / 180
         self.M0 = M0
         self.mass = mass
+        self.name = name
         self.radius = 5e9
+        self.calculate()
+
+
+    def calculate(self):
+        a = self.a
+        e = self.e
+        i = self.i
+        omega = self.omega
+        w = self.w
+        M0 = self.M0
+        mass = self.mass
+        name = self.name
 
         # find semiminor axis (b)
         b = a * sqrt(1 - pow(e, 2))
@@ -56,6 +69,14 @@ class planet:
         self.trail = curve(color=color.red)
         # add label
         self.label = label(pos=self.pos, text=name)
+        t = np.linspace(0, 2 * pi, num=200)
+        self.orbit = curve(x=0 + a * cos(t) * ua.x + b * sin(t) * ub.x, y=0 + a * cos(t) * ua.y + b * sin(t) * ub.y,
+                           z=0 + a * cos(t) * ua.z + b * sin(t) * ub.z)
+        print "I got calculated!"
+
+
+
+
 
 scene = display(x=50, y=30, width=1400, height=1000)
 Sun = sphere(pos=(0, 0, 0), radius=1e10, color=color.orange, material=materials.emissive)
@@ -85,11 +106,26 @@ def mv_earth ():
     lPlanets[x].label.pos = lPlanets[x].pos
     top.after(50,mv_earth)
 
+def update():
+    lPlanets[0].calculate()
 
+def change_e():
+    print lPlanets[0].e
+    lPlanets[0].e = 0.9
+    print lPlanets[0].e
+
+# layout of GUI
 B = Tkinter.Button(top, text ="Hello", command = helloCallBack)
+B.pack()
+
+B2 = Tkinter.Button(top, text ="Update",command = update)
+B2.pack()
+
 LF = Tkinter.LabelFrame(top, height = 300, width = 300)
 LF.pack()
-B.pack()
+
+B3 = Tkinter.Button(top, text ="Change e",command = change_e)
+B3.pack()
 
 
 top.after(0, mv_earth)
