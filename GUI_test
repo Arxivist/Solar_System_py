@@ -1,0 +1,47 @@
+# Run tkinter code in another thread
+
+
+from visual import *
+import Tkinter as tk
+import tkMessageBox
+
+import threading
+
+
+
+
+
+class App(threading.Thread):
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.start()
+
+    def callback(self):
+        self.root.quit()
+
+    def testCallback(self):
+        tkMessageBox.showinfo("Hello Python", "Hello World")
+
+    def run(self):
+        self.root = tk.Tk()
+        self.root.protocol("WM_DELETE_WINDOW", self.callback)
+
+        label = tk.Label(self.root, text="Hello World")
+        label.pack()
+
+        button = tk.Button(self.root, text="Testing", command=self.testCallback)
+        button.pack()
+
+        self.root.mainloop()
+
+
+app = App()
+print('Now we can continue running code while mainloop runs!')
+scene = display(x=50, y=30, width=200, height=150)
+sphere()
+for i in range(2):
+    print(i)
+
+
+
