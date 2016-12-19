@@ -1,47 +1,26 @@
-# Run tkinter code in another thread
-
-
-from visual import *
-import Tkinter as tk
+import Tkinter
 import tkMessageBox
+from visual import *
 
-import threading
+top = Tkinter.Tk()
 
+scene = display(x=50, y=30, width=1400, height=1000)
+sun = sphere(color = color.orange, radius = 10)
+earth = sphere(pos = (100,0,0), material = materials.earth, radius = 3)
 
+def helloCallBack():
+    earth.color = color.red
+    tkMessageBox.showinfo( "Hello Python", "Hello World")
 
+def mv_earth ():
+    earth.pos.x -= 1
+    top.after(50,mv_earth)
 
-
-class App(threading.Thread):
-
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.start()
-
-    def callback(self):
-        self.root.quit()
-
-    def testCallback(self):
-        tkMessageBox.showinfo("Hello Python", "Hello World")
-
-    def run(self):
-        self.root = tk.Tk()
-        self.root.protocol("WM_DELETE_WINDOW", self.callback)
-
-        label = tk.Label(self.root, text="Hello World")
-        label.pack()
-
-        button = tk.Button(self.root, text="Testing", command=self.testCallback)
-        button.pack()
-
-        self.root.mainloop()
+B = Tkinter.Button(top, text ="Hello", command = helloCallBack)
+LF = Tkinter.LabelFrame(top, height = 300, width = 300)
+LF.pack()
+B.pack()
 
 
-app = App()
-print('Now we can continue running code while mainloop runs!')
-scene = display(x=50, y=30, width=200, height=150)
-sphere()
-for i in range(2):
-    print(i)
-
-
-
+top.after(0, mv_earth)
+top.mainloop()
