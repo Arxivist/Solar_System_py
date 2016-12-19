@@ -1,20 +1,26 @@
+import Tkinter
+import tkMessageBox
 from visual import *
 
-scene = display (width = 1000, height = 1000)
-Sun = sphere(pos=(0,0,0),radius = 100, color = color.orange)
-Earth = sphere(pos=(200,0,0), radius = 10, material = materials.earth, make_trail = true)
-#Earth.trail_object.color=color.orange
-trail = curve(color=color.red)
+top = Tkinter.Tk()
+
+scene = display(x=50, y=30, width=1400, height=1000)
+sun = sphere(color = color.orange, radius = 10)
+earth = sphere(pos = (100,0,0), material = materials.earth, radius = 3)
+
+def helloCallBack():
+    earth.color = color.red
+    tkMessageBox.showinfo( "Hello Python", "Hello World")
+
+B = Tkinter.Button(top, text ="Hello", command = helloCallBack)
+LF = Tkinter.LabelFrame(top, height = 300, width = 300)
+LF.pack()
+B.pack()
 
 
-Earth.v = vector (0,-7.5,0)
 
-for i in range (1000):
+top.mainloop()
+
+for i in range(200):
     rate(50)
-    dist = (Earth.x**2+Earth.y**2+Earth.z**2)**0.5
-    r= (Sun.pos-Earth.pos)/dist
-    Fgrav = 10000*r/dist**2
-    Earth.v+=Fgrav
-    Earth.pos+=Earth.v
-    trail.append(pos=Earth.pos)
-    if dist <= Sun.radius : break
+    earth.pos.x -= 1
