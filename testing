@@ -12,15 +12,15 @@ def helloCallBack():
     earth.color = color.red
     tkMessageBox.showinfo( "Hello Python", "Hello World")
 
+def mv_earth ():
+    earth.pos.x -= 1
+    top.after(50,mv_earth)
+
 B = Tkinter.Button(top, text ="Hello", command = helloCallBack)
 LF = Tkinter.LabelFrame(top, height = 300, width = 300)
 LF.pack()
 B.pack()
 
 
-
+top.after(0, mv_earth)
 top.mainloop()
-
-for i in range(200):
-    rate(50)
-    earth.pos.x -= 1
