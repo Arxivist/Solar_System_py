@@ -6,7 +6,7 @@ top = Tkinter.Tk()
 GAMMA = 6.67408e-11
 MASS_SUN = 1.989e30
 # step for procedural analysis
-DELTA = 100000
+DELTA = 10000
 
 class planet:
     #
@@ -20,9 +20,9 @@ class planet:
     # 6 - Mass
     def __init__(self, a, e, i, omega, w, M0, mass, name):
         self.a = a
-        e=0.6
+        #e=0.6
         self.e = e
-        i = 10
+        #i = 10
         i = i * pi / 180
         self.i = i
         omega = omega * pi / 180
@@ -33,7 +33,7 @@ class planet:
         self.M0 = M0
         self.mass = mass
         self.name = name
-        self.radius = 5e9
+        self.radius = 3e9
 
         # find semiminor axis (b)
         b = a * sqrt(1 - pow(e, 2))
@@ -63,6 +63,13 @@ class planet:
         self.asc_node = vector(-f1.x + a * cos(omega) * ua.x + b * sin(omega) * ub.x,
                                -f1.y + a * cos(omega) * ua.y + b * sin(omega) * ub.y,
                                -f1.z + a * cos(omega) * ua.z + b * sin(omega) * ub.z)
+
+        # find zero
+        self.zero = vector(-f1.x + a * cos(0) * ua.x + b * sin(0) * ub.x,
+                               -f1.y + a * cos(0) * ua.y + b * sin(0) * ub.y,
+                               -f1.z + a * cos(0) * ua.z + b * sin(0) * ub.z)
+        self.z_label = label(pos=self.zero, text="zero")
+
         # Calculate the initial velocity
         # assumptions made: Orbiting Sun, with sun at centre of orbit
         # Calculate speed using v=sqrt(G*M*(2/r-1/a)
@@ -107,12 +114,21 @@ class planet:
         self.asc_node_label = label(pos=self.asc_node, text="A_n")
         self.asc_node_point = points(pos=self.asc_node, size=10, color=color.green)
 
+        # display axis
+        self.b_disp = curve(pos=[f1,(1e11,0,0)], color=color.white)
+        self.b_label = label(pos=(1e11,0,0), text="x")
+
+        self.b_disp = curve(pos=[f1, (0,1e11,  0)], color=color.white)
+        self.b_label = label(pos=(0,1e11,  0), text="y")
+
+        self.b_disp = curve(pos=[f1, ( 0, 0,1e11)], color=color.white)
+        self.b_label = label(pos=(0, 0,1e11), text="z")
 
 
 scene = display(x=50, y=30, width=1400, height=1000)
 Sun = sphere(pos=(0, 0, 0), radius=1e10, color=color.orange, material=materials.emissive)
 lPlanets = []
-lPlanets.append(planet(1.00000011 * 1.496e+11, 0.01671022, 0.00005, -11.26064, 102.94719, 100.46435, 5.972e24, 'Earth'))
+lPlanets.append(planet(0.38709893 * 1.496e+11, 0.20563069, 7.00487, 48.33167, 77.45645, 252.25084, 3.285e23, 'Mercury'))
 
 
 def helloCallBack():
