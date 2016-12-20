@@ -6,7 +6,7 @@ top = Tkinter.Tk()
 GAMMA = 6.67408e-11
 MASS_SUN = 1.989e30
 # step for procedural analysis
-DELTA = 200000
+DELTA = 100000
 
 class planet:
     #
@@ -20,7 +20,9 @@ class planet:
     # 6 - Mass
     def __init__(self, a, e, i, omega, w, M0, mass, name):
         self.a = a
+        e=0.6
         self.e = e
+        i = 10
         i = i * pi / 180
         self.i = i
         omega = omega * pi / 180
@@ -32,21 +34,12 @@ class planet:
         self.mass = mass
         self.name = name
         self.radius = 5e9
-        self.calculate()
-
-
-    def calculate(self):
-        a = self.a
-        e = self.e
-        i = self.i
-        omega = self.omega
-        w = self.w
-        M0 = self.M0
-        mass = self.mass
-        name = self.name
 
         # find semiminor axis (b)
         b = a * sqrt(1 - pow(e, 2))
+
+        #store self.b for later use
+        self.b = b
         # find vector associated with semimajor axis
         va = vector(a * cos(i) * cos(w), a * cos(i) * sin(w), a * sin(i))
         ua = va / mag(va)
@@ -54,9 +47,22 @@ class planet:
         # note, fix this later to add inclination, currently slightly off
         vb = vector(b * cos(w - pi / 2), b * sin(w - pi / 2), 0)
         ub = vb / mag(vb)
+        # find the centre of the focal point that the sun is at
+        f1 = va-va*(1-e)
+        f2 = va-va*(1+e)
+
+        #correct for centering around f1
+        va -= f1
+        vb -= f1
+
         # calculate initial position
-        self.pos = vector(0 + a * cos(M0) * ua.x + b * sin(M0) * ub.x, 0 + a * cos(M0) * ua.y + b * sin(M0) * ub.y,
-                          0 + a * cos(M0) * ua.z + b * sin(M0) * ub.z)
+        self.pos = vector(-f1.x + a * cos(M0) * ua.x + b * sin(M0) * ub.x, -f1.y + a * cos(M0) * ua.y + b * sin(M0) * ub.y,
+                          -f1.z + a * cos(M0) * ua.z + b * sin(M0) * ub.z)
+
+        # calculate location of ascending node
+        self.asc_node = vector(-f1.x + a * cos(omega) * ua.x + b * sin(omega) * ub.x,
+                               -f1.y + a * cos(omega) * ua.y + b * sin(omega) * ub.y,
+                               -f1.z + a * cos(omega) * ua.z + b * sin(omega) * ub.z)
         # Calculate the initial velocity
         # assumptions made: Orbiting Sun, with sun at centre of orbit
         # Calculate speed using v=sqrt(G*M*(2/r-1/a)
@@ -64,17 +70,42 @@ class planet:
         # velocity is perpindicular to orbital elliptacal. Take unit vector of velocity and multiply by speed to get initial velocity
         self.vel = norm(-a * sin(M0) * ua + b * cos(M0) * ub) * speed
 
-        # display elements
+        # display elements, nothing beyond her ein the init is required to run
         self.sphere = sphere(pos=self.pos, radius=self.radius, make_trail=True, color=color.gray(50))
         self.trail = curve(color=color.red)
         # add label
         self.label = label(pos=self.pos, text=name)
         t = np.linspace(0, 2 * pi, num=200)
-        self.orbit = curve(x=0 + a * cos(t) * ua.x + b * sin(t) * ub.x, y=0 + a * cos(t) * ua.y + b * sin(t) * ub.y,
-                           z=0 + a * cos(t) * ua.z + b * sin(t) * ub.z)
-        print "I got calculated!"
 
+        #display the orbit
+        self.orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
+                           y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
+                           z=-f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z,
+                           color=color.orange)
 
+        self.ref_orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
+                           y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
+                           z=0,
+                           color=color.white)
+
+        # above equasions have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
+        f1 = (0,0,0)
+        f2 = 2*f2
+
+        self.f1_label = label(pos=f1, text="f1")
+        self.f2_label = label(pos=f2, text="f2")
+        self.f2_point = points(pos=f2, size=5, color=color.green)
+        self.a_disp = curve(pos=[(f2/2),va],color=color.green)
+        self.a_point = points(pos=va, size = 5, color = color.green)
+        self.a_label = label(pos=((va+f2/2)/2), text="a")
+
+        #display semi-minor axis
+        self.b_disp = curve(pos=[(f2/2),vb],color=color.blue)
+        self.b_label = label(pos=(vb+f2/2)/2, text="b")
+
+        #display ascending node
+        self.asc_node_label = label(pos=self.asc_node, text="A_n")
+        self.asc_node_point = points(pos=self.asc_node, size=10, color=color.green)
 
 
 
@@ -106,26 +137,17 @@ def mv_earth ():
     lPlanets[x].label.pos = lPlanets[x].pos
     top.after(50,mv_earth)
 
-def update():
-    lPlanets[0].calculate()
 
-def change_e():
-    print lPlanets[0].e
-    lPlanets[0].e = 0.9
-    print lPlanets[0].e
 
 # layout of GUI
 B = Tkinter.Button(top, text ="Hello", command = helloCallBack)
 B.pack()
 
-B2 = Tkinter.Button(top, text ="Update",command = update)
-B2.pack()
+
 
 LF = Tkinter.LabelFrame(top, height = 300, width = 300)
 LF.pack()
 
-B3 = Tkinter.Button(top, text ="Change e",command = change_e)
-B3.pack()
 
 
 top.after(0, mv_earth)
