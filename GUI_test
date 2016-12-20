@@ -40,9 +40,15 @@ class planet:
 
         #store self.b for later use
         self.b = b
+        #find unit vector for ascending node
+        u_an = vector(cos(omega),sin(omega),0)
+        # find unit vector at max inclination
+        u_hp = vector(cos(i) * cos(omega+pi/2),cos(i) * sin(omega+pi/2),sin(i))
+
         # find vector associated with semimajor axis
         va = vector(a * cos(i) * cos(w), a * cos(i) * sin(w), a * sin(i))
         ua = va / mag(va)
+
         # find unit vector associated with semiminor axis
         # note, fix this later to add inclination, currently slightly off
         vb = vector(b * cos(w - pi / 2), b * sin(w - pi / 2), 0)
@@ -55,14 +61,17 @@ class planet:
         va -= f1
         vb -= f1
 
+
         # calculate initial position
         self.pos = vector(-f1.x + a * cos(M0) * ua.x + b * sin(M0) * ub.x, -f1.y + a * cos(M0) * ua.y + b * sin(M0) * ub.y,
                           -f1.z + a * cos(M0) * ua.z + b * sin(M0) * ub.z)
 
         # calculate location of ascending node
-        self.asc_node = vector(-f1.x + a * cos(omega) * ua.x + b * sin(omega) * ub.x,
-                               -f1.y + a * cos(omega) * ua.y + b * sin(omega) * ub.y,
-                               -f1.z + a * cos(omega) * ua.z + b * sin(omega) * ub.z)
+        # ellipse has been rotated such that the ascending node is at 0
+        self.asc_node = vector(-f1.x + a * cos(0) * u_an.x + b * sin(0) * u_hp.x,
+                               -f1.y + a * cos(0) * u_an.y + b * sin(0) * u_hp.y,
+                               -f1.z + a * cos(0) * u_an.z + b * sin(0) * u_hp.z)
+        print self.asc_node
 
         # find zero
         self.zero = vector(-f1.x + a * cos(0) * ua.x + b * sin(0) * ub.x,
@@ -85,17 +94,24 @@ class planet:
         t = np.linspace(0, 2 * pi, num=200)
 
         #display the orbit
+        #needs modifications to account for inclination
         self.orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
                            y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
                            z=-f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z,
                            color=color.orange)
 
+        # display modified orbit
+        self.orbit = curve(x=-f1.x + a * cos(t) * u_an.x + b * sin(t) * u_hp.x,
+                           y=-f1.y + a * cos(t) * u_an.y + b * sin(t) * u_hp.y,
+                           z=-f1.z + a * cos(t) * u_an.z + b * sin(t) * u_hp.z,
+                           color=color.green)
+
         self.ref_orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
                            y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
-                           z=0,
+                           z=-f1.z,
                            color=color.white)
 
-        # above equasions have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
+        # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
         f1 = (0,0,0)
         f2 = 2*f2
 
