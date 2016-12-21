@@ -20,7 +20,7 @@ class planet:
     # 6 - Mass
     def __init__(self, a, e, i, omega, w, M0, mass, name):
         self.a = a
-        #e=0.6
+        #e=0
         self.e = e
         #i = 10
         i = i * pi / 180
@@ -40,19 +40,25 @@ class planet:
 
         #store self.b for later use
         self.b = b
-        #find unit vector for ascending node
-        u_an = vector(cos(omega),sin(omega),0)
-        # find unit vector at max inclination
-        u_hp = vector(cos(i) * cos(omega+pi/2),cos(i) * sin(omega+pi/2),sin(i))
 
-        # find vector associated with semimajor axis
-        va = vector(a * cos(i) * cos(w), a * cos(i) * sin(w), a * sin(i))
+        # find vector associated with semimajor and semiminor axes
+        # find the inclination in z-plane of the semi-major vector
+        i_a = asin(sin(i)*sin(w))
+        # find the rotation in the xy plane of the semimajor vector. Equal to omage, plus the value of w projected onto the xy plane.
+        w_a = atan((sin(w)*cos(i))/cos(w))
+        theta = omega + w_a
+        #calculate vector
+        va = vector(a * cos(i_a) * cos(theta), a * cos(i_a) * sin(theta), a * sin(i_a))
         ua = va / mag(va)
 
         # find unit vector associated with semiminor axis
-        # note, fix this later to add inclination, currently slightly off
-        vb = vector(b * cos(w - pi / 2), b * sin(w - pi / 2), 0)
+        # find the inclination in z-plane of the semi-minor vector
+        i_b = asin(sin(i) * sin(w+pi/2))
+        # calculate vector
+        vb = vector(b * cos(i_b)*cos(theta + pi / 2), b * cos(i_b)*sin(theta + pi / 2), b * sin(i_b))
         ub = vb / mag(vb)
+
+
         # find the centre of the focal point that the sun is at
         f1 = va-va*(1-e)
         f2 = va-va*(1+e)
@@ -63,21 +69,15 @@ class planet:
 
 
         # calculate initial position
-        self.pos = vector(-f1.x + a * cos(M0) * ua.x + b * sin(M0) * ub.x, -f1.y + a * cos(M0) * ua.y + b * sin(M0) * ub.y,
+        self.pos = vector(-f1.x + a * cos(M0) * ua.x + b * sin(M0) * ub.x,
+                          -f1.y + a * cos(M0) * ua.y + b * sin(M0) * ub.y,
                           -f1.z + a * cos(M0) * ua.z + b * sin(M0) * ub.z)
 
         # calculate location of ascending node
-        # ellipse has been rotated such that the ascending node is at 0
-        self.asc_node = vector(-f1.x + a * cos(0) * u_an.x + b * sin(0) * u_hp.x,
-                               -f1.y + a * cos(0) * u_an.y + b * sin(0) * u_hp.y,
-                               -f1.z + a * cos(0) * u_an.z + b * sin(0) * u_hp.z)
-        print self.asc_node
-
-        # find zero
-        self.zero = vector(-f1.x + a * cos(0) * ua.x + b * sin(0) * ub.x,
-                               -f1.y + a * cos(0) * ua.y + b * sin(0) * ub.y,
-                               -f1.z + a * cos(0) * ua.z + b * sin(0) * ub.z)
-        self.z_label = label(pos=self.zero, text="zero")
+        # ellipse has been rotated such that the semimajor axis is at 0
+        self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
+                               -f1.y + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
+                               -f1.z + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
 
         # Calculate the initial velocity
         # assumptions made: Orbiting Sun, with sun at centre of orbit
@@ -86,7 +86,7 @@ class planet:
         # velocity is perpindicular to orbital elliptacal. Take unit vector of velocity and multiply by speed to get initial velocity
         self.vel = norm(-a * sin(M0) * ua + b * cos(M0) * ub) * speed
 
-        # display elements, nothing beyond her ein the init is required to run
+        # display elements, nothing beyond here in the init is required to run
         self.sphere = sphere(pos=self.pos, radius=self.radius, make_trail=True, color=color.gray(50))
         self.trail = curve(color=color.red)
         # add label
@@ -94,17 +94,10 @@ class planet:
         t = np.linspace(0, 2 * pi, num=200)
 
         #display the orbit
-        #needs modifications to account for inclination
         self.orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
                            y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
                            z=-f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z,
                            color=color.orange)
-
-        # display modified orbit
-        self.orbit = curve(x=-f1.x + a * cos(t) * u_an.x + b * sin(t) * u_hp.x,
-                           y=-f1.y + a * cos(t) * u_an.y + b * sin(t) * u_hp.y,
-                           z=-f1.z + a * cos(t) * u_an.z + b * sin(t) * u_hp.z,
-                           color=color.green)
 
         self.ref_orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
                            y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
