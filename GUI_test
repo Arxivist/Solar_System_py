@@ -91,9 +91,9 @@ class planet:
         self.trail = curve(color=color.red)
         # add label
         self.label = label(pos=self.pos, text=name)
-        t = np.linspace(0, 2 * pi, num=200)
 
         #display the orbit
+        t = np.linspace(0, 2 * pi, num=200)
         self.orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
                            y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
                            z=-f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z,
@@ -124,14 +124,89 @@ class planet:
         self.asc_node_point = points(pos=self.asc_node, size=10, color=color.green)
 
         # display axis
-        self.b_disp = curve(pos=[f1,(1e11,0,0)], color=color.white)
-        self.b_label = label(pos=(1e11,0,0), text="x")
+        self.x_disp = curve(pos=[f1,(1e11,0,0)], color=color.white)
+        self.x_label = label(pos=(1e11,0,0), text="x")
 
-        self.b_disp = curve(pos=[f1, (0,1e11,  0)], color=color.white)
-        self.b_label = label(pos=(0,1e11,  0), text="y")
+        self.y_disp = curve(pos=[f1, (0,1e11,  0)], color=color.white)
+        self.y_label = label(pos=(0,1e11,  0), text="y")
 
-        self.b_disp = curve(pos=[f1, ( 0, 0,1e11)], color=color.white)
-        self.b_label = label(pos=(0, 0,1e11), text="z")
+        self.z_disp = curve(pos=[f1, ( 0, 0,1e11)], color=color.white)
+        self.z_label = label(pos=(0, 0,1e11), text="z")
+
+    def calculate(self):
+        a = self.a
+        e =self.e
+        i = self.i
+        omega = self.omega
+        w = self.w
+        M0 = self.M0
+
+        # find semiminor axis (b)
+        b = a * sqrt(1 - pow(e, 2))
+
+        # store self.b for later use
+        self.b = b
+
+        # find vector associated with semimajor and semiminor axes
+        # find the inclination in z-plane of the semi-major vector
+        i_a = asin(sin(i) * sin(w))
+        # find the rotation in the xy plane of the semimajor vector. Equal to omage, plus the value of w projected onto the xy plane.
+        w_a = atan((sin(w) * cos(i)) / cos(w))
+        theta = omega + w_a
+        # calculate vector
+        va = vector(a * cos(i_a) * cos(theta), a * cos(i_a) * sin(theta), a * sin(i_a))
+        ua = va / mag(va)
+
+        # find unit vector associated with semiminor axis
+        # find the inclination in z-plane of the semi-minor vector
+        i_b = asin(sin(i) * sin(w + pi / 2))
+        # calculate vector
+        vb = vector(b * cos(i_b) * cos(theta + pi / 2), b * cos(i_b) * sin(theta + pi / 2), b * sin(i_b))
+        ub = vb / mag(vb)
+
+        # find the centre of the focal point that the sun is at
+        f1 = va - va * (1 - e)
+        f2 = va - va * (1 + e)
+
+        # correct for centering around f1
+        va -= f1
+        vb -= f1
+
+        # calculate location of ascending node
+        # ellipse has been rotated such that the semimajor axis is at 0
+        self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
+                               -f1.y + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
+                               -f1.z + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
+
+        # update the orbit and the reference orbit
+        t = np.linspace(0, 2 * pi, num=200)
+        self.orbit.x = -f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x
+        self.orbit.y = -f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
+        self.orbit.z = -f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z
+
+        self.ref_orbit.x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x
+        self.ref_orbit.y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
+        self.ref_orbit.z=-f1.z
+
+        # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
+        f1 = (0,0,0)
+        f2 = 2*f2
+
+        # update the locations of the various pieces of information
+        self.f1_label.pos = f1
+        self.f2_label.pos = f2
+        self.f2_point.pos = f2
+        self.a_disp.pos = [(f2/2),va]
+        self.a_point.pos = va
+        self.a_label.pos = ((va+f2/2)/2)
+
+        #update semi-minor axis
+        self.b_disp.pos=[(f2/2),vb]
+        self.b_label.pos=(vb+f2/2)/2
+
+        #update ascending node
+        self.asc_node_label.pos=self.asc_node
+        self.asc_node_point.pos=self.asc_node
 
 
 scene = display(x=50, y=30, width=1400, height=1000)
@@ -143,8 +218,10 @@ lPlanets.append(planet(0.38709893 * 1.496e+11, 0.20563069, 7.00487, 48.33167, 77
 def helloCallBack():
     lPlanets[0].sphere.color = color.red
 
-def mv_earth ():
+def update_loop ():
+    #Select the planet we are working with
     x=0
+
     # use newtons equation for gravity, F = G*M1*M2/r^2
     F = -1 * norm(lPlanets[x].pos) * (GAMMA * MASS_SUN * lPlanets[x].mass / (pow(mag(lPlanets[x].pos), 2)))
     # use F = M*A to find accelelration of planet
@@ -160,22 +237,53 @@ def mv_earth ():
 
     # move labels
     lPlanets[x].label.pos = lPlanets[x].pos
-    top.after(50,mv_earth)
 
+    # check to see if any of the sliders have changed (a, e, i, omega, w)
+    e_new = e_scale.get()
+    i_new = i_scale.get()
+    omega_new = omega_scale.get()
+    w_new = w_scale.get()
+    if lPlanets[x].e != e_new:
+        lPlanets[x].e = e_new
+        lPlanets[x].calculate()
+    elif lPlanets[x].i != i_new:
+        lPlanets[x].i = i_new
+        lPlanets[x].calculate()
+    elif lPlanets[x].omega != omega_new:
+        lPlanets[x].omega = omega_new
+        lPlanets[x].calculate()
+    elif lPlanets[x].w != w_new:
+        lPlanets[x].w = w_new
+        lPlanets[x].calculate()
 
+    # run loop again in 50 ms
+    top.after(50,update_loop)
 
 # layout of GUI
-B = Tkinter.Button(top, text ="Hello", command = helloCallBack)
-B.pack()
-
-
-
 LF = Tkinter.LabelFrame(top, height = 300, width = 300)
 LF.pack()
 
+B = Tkinter.Button(top, text ="Hello", command = helloCallBack)
+B.pack()
+
+e_scale = Tkinter.Scale(top, from_=0, to=1, resolution =0.01, orient = "horizontal", label = "e", length = 250)
+e_scale.set(lPlanets[0].e)
+e_scale.pack()
+
+i_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "i", length = 250)
+i_scale.set(lPlanets[0].i)
+i_scale.pack()
+
+omega_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "omega", length = 250)
+omega_scale.set(lPlanets[0].omega)
+omega_scale.pack()
+
+w_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "w", length = 250)
+w_scale.set(lPlanets[0].w)
+w_scale.pack()
 
 
-top.after(0, mv_earth)
+top.after(0, update_loop)
 top.mainloop()
 
 
