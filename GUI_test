@@ -9,6 +9,7 @@ MASS_SUN = 1.989e30
 DELTA = 10000
 
 class planet:
+    #initialize class variables
     #
     # Orbital Elements:
     # 0 - a (Semimajor axis, Au)
@@ -92,8 +93,8 @@ class planet:
         self.ref_orbit = curve(color=color.white)
 
         # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
-        f1 = (0,0,0)
-        f2 = 2*f2
+        f1 = vector(0,0,0)
+        f2 = vector(2*f2)
 
         self.f1_label = label(text="f1")
         self.f2_label = label(text="f2")
@@ -108,11 +109,19 @@ class planet:
 
         #display ascending node
         self.asc_node_label = label( text="A_n")
-        self.asc_node_point = points(size=10, color=color.green)
+        self.asc_node_disp = curve(color=color.green)
+
+        # display reference vector
+        self.vref_label = label(text="Ref")
+        self.vref_disp = curve(color=color.white)
 
         # display omega
         self.omega_disp = curve(color=color.magenta)
         self.omega_label = label(text="o")
+
+        # display w
+        self.w_disp = curve(color=color.red)
+        self.w_label = label(text="w")
 
         # display axis
         self.x_disp = curve(pos=[f1,(1e11,0,0)], color=color.white)
@@ -164,10 +173,12 @@ class planet:
         vb -= f1
 
         # calculate location of ascending node
-        # ellipse has been rotated such that the semimajor axis is at 0
         self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
                                -f1.y + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
                                -f1.z + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
+
+        # calculate location of reference vector
+        self.vref_label.pos = vector(-f1+ a * cos(-w-omega) * ua + b * sin(-w-omega) * ub)
 
         # update the orbit and the reference orbit
         t = np.linspace(0, 2 * pi, num=200)
@@ -179,11 +190,22 @@ class planet:
         self.ref_orbit.y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
         self.ref_orbit.z=-f1.z
 
-        # update curve
+        # update omega
         t = np.linspace(-omega,0 , num=200)
         self.omega_disp.x = (-f1.x + a * cos(t-w) * ua.x + b * sin(t-w) * ub.x) / 2
         self.omega_disp.y = (-f1.y + a * cos(t-w) * ua.y + b * sin(t-w) * ub.y) / 2
         self.omega_disp.z = (-f1.z + a * cos(t-w) * ua.z + b * sin(t-w) * ub.z) / 2
+
+
+        self.omega_label.pos = (-f1+ a * cos(-omega/2 - w) * ua + b * sin(-omega/2 - w) * ub) / 2
+
+        # update w
+        t = np.linspace(0, -w, num=200)
+        self.w_disp.x = (-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x) / 2
+        self.w_disp.y = (-f1.y + a * cos(t ) * ua.y + b * sin(t) * ub.y) / 2
+        self.w_disp.z = (-f1.z + a * cos(t ) * ua.z + b * sin(t) * ub.z) / 2
+
+        self.w_label.pos = (-f1 + a * cos(-w/2) * ua + b * sin(-w/2) * ub) / 2
 
 
         # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
@@ -206,7 +228,10 @@ class planet:
 
         #update ascending node
         self.asc_node_label.pos=self.asc_node
-        self.asc_node_point.pos=self.asc_node
+        self.asc_node_disp.pos=[f1,self.asc_node]
+
+        # update reference vector
+        self.vref_disp.pos = [f1, self.vref_label.pos]
 
 
 scene = display(x=50, y=30, width=1400, height=1000)
@@ -240,9 +265,9 @@ def update_loop ():
 
     # check to see if any of the sliders have changed (a, e, i, omega, w)
     e_new = e_scale.get()
-    i_new = i_scale.get()
-    omega_new = omega_scale.get()
-    w_new = w_scale.get()
+    i_new = i_scale.get() * pi / 180
+    omega_new = omega_scale.get() * pi / 180
+    w_new = w_scale.get() * pi / 180
     if lPlanets[x].e != e_new:
         lPlanets[x].e = e_new
         lPlanets[x].calculate()
@@ -270,16 +295,16 @@ e_scale = Tkinter.Scale(top, from_=0, to=1, resolution =0.01, orient = "horizont
 e_scale.set(lPlanets[0].e)
 e_scale.pack()
 
-i_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "i", length = 250)
-i_scale.set(lPlanets[0].i)
+i_scale = Tkinter.Scale(top, from_=0, to=360, resolution =1, orient = "horizontal", label = "i", length = 250)
+i_scale.set(lPlanets[0].i*180/pi)
 i_scale.pack()
 
-omega_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "omega", length = 250)
-omega_scale.set(lPlanets[0].omega)
+omega_scale = Tkinter.Scale(top, from_=0, to=360, resolution =1, orient = "horizontal", label = "omega", length = 250)
+omega_scale.set(lPlanets[0].omega*180/pi)
 omega_scale.pack()
 
-w_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "w", length = 250)
-w_scale.set(lPlanets[0].w)
+w_scale = Tkinter.Scale(top, from_=0, to=360, resolution =1, orient = "horizontal", label = "w", length = 250)
+w_scale.set(lPlanets[0].w*180/pi)
 w_scale.pack()
 
 
