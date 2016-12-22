@@ -69,15 +69,10 @@ class planet:
 
 
         # calculate initial position
-        self.pos = vector(-f1.x + a * cos(M0) * ua.x + b * sin(M0) * ub.x,
-                          -f1.y + a * cos(M0) * ua.y + b * sin(M0) * ub.y,
-                          -f1.z + a * cos(M0) * ua.z + b * sin(M0) * ub.z)
+        self.pos = vector((f1.x+f2.x)/2 + a * cos(M0) * ua.x + b * sin(M0) * ub.x,
+                          (f1.x + f2.x) / 2+ a * cos(M0) * ua.y + b * sin(M0) * ub.y,
+                          (f1.x + f2.x) / 2 + a * cos(M0) * ua.z + b * sin(M0) * ub.z)
 
-        # calculate location of ascending node
-        # ellipse has been rotated such that the semimajor axis is at 0
-        self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
-                               -f1.y + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
-                               -f1.z + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
 
         # Calculate the initial velocity
         # assumptions made: Orbiting Sun, with sun at centre of orbit
@@ -92,36 +87,28 @@ class planet:
         # add label
         self.label = label(pos=self.pos, text=name)
 
-        #display the orbit
-        t = np.linspace(0, 2 * pi, num=200)
-        self.orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
-                           y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
-                           z=-f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z,
-                           color=color.orange)
-
-        self.ref_orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
-                           y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
-                           z=-f1.z,
-                           color=color.white)
+        #initialize the orbit and ref orbit curves
+        self.orbit = curve(color=color.orange)
+        self.ref_orbit = curve(color=color.white)
 
         # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
-        f1 = (0,0,0)
-        f2 = 2*f2
+        #f1 = (0,0,0)
+        #f2 = 2*f2
 
-        self.f1_label = label(pos=f1, text="f1")
-        self.f2_label = label(pos=f2, text="f2")
-        self.f2_point = points(pos=f2, size=5, color=color.green)
-        self.a_disp = curve(pos=[(f2/2),va],color=color.green)
-        self.a_point = points(pos=va, size = 5, color = color.green)
-        self.a_label = label(pos=((va+f2/2)/2), text="a")
+        self.f1_label = label(text="f1")
+        self.f2_label = label(text="f2")
+        self.f2_point = points(size=5, color=color.green)
+        self.a_disp = curve(color=color.green)
+        self.a_point = points(size = 5, color = color.green)
+        self.a_label = label(text="a")
 
         #display semi-minor axis
         self.b_disp = curve(pos=[(f2/2),vb],color=color.blue)
         self.b_label = label(pos=(vb+f2/2)/2, text="b")
 
         #display ascending node
-        self.asc_node_label = label(pos=self.asc_node, text="A_n")
-        self.asc_node_point = points(pos=self.asc_node, size=10, color=color.green)
+        self.asc_node_label = label( text="A_n")
+        self.asc_node_point = points(size=10, color=color.green)
 
         # display axis
         self.x_disp = curve(pos=[f1,(1e11,0,0)], color=color.white)
@@ -132,6 +119,8 @@ class planet:
 
         self.z_disp = curve(pos=[f1, ( 0, 0,1e11)], color=color.white)
         self.z_label = label(pos=(0, 0,1e11), text="z")
+
+        self.calculate()
 
     def calculate(self):
         a = self.a
@@ -169,28 +158,28 @@ class planet:
         f2 = va - va * (1 + e)
 
         # correct for centering around f1
-        va -= f1
-        vb -= f1
+        #va -= f1
+        #vb -= f1
 
         # calculate location of ascending node
-        # ellipse has been rotated such that the semimajor axis is at 0
-        self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
-                               -f1.y + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
-                               -f1.z + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
+        # have to offset for moving centre of the ellipse to halfway between F1 and F2, allows Sun to stay at 0,0,0
+        self.asc_node = vector((f1.x+f2.x)/2 + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
+                               (f1.y + f2.y)/2 + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
+                               (f1.z + f2.z)/2 + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
 
         # update the orbit and the reference orbit
         t = np.linspace(0, 2 * pi, num=200)
-        self.orbit.x = -f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x
-        self.orbit.y = -f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
-        self.orbit.z = -f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z
+        self.orbit.x = (f1.x+f2.x)/2 + a * cos(t) * ua.x + b * sin(t) * ub.x
+        self.orbit.y = (f1.y+f2.y)/2+ a * cos(t) * ua.y + b * sin(t) * ub.y
+        self.orbit.z = (f1.z+f2.z)/2 + a * cos(t) * ua.z + b * sin(t) * ub.z
 
-        self.ref_orbit.x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x
-        self.ref_orbit.y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
-        self.ref_orbit.z=-f1.z
+        self.ref_orbit.x=(f1.x+f2.x)/2 + a * cos(t) * ua.x + b * sin(t) * ub.x
+        self.ref_orbit.y=(f1.y+f2.y)/2 + a * cos(t) * ua.y + b * sin(t) * ub.y
+        self.ref_orbit.z=(f1.z+f2.z)/2
 
         # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
-        f1 = (0,0,0)
-        f2 = 2*f2
+        #f1 = (0,0,0)
+        #f2 = 2*f2
 
         # update the locations of the various pieces of information
         self.f1_label.pos = f1
@@ -240,9 +229,9 @@ def update_loop ():
 
     # check to see if any of the sliders have changed (a, e, i, omega, w)
     e_new = e_scale.get()
-    i_new = i_scale.get()
-    omega_new = omega_scale.get()
-    w_new = w_scale.get()
+    i_new = i_scale.get()*pi/180
+    omega_new = omega_scale.get()*pi/180
+    w_new = w_scale.get()*pi/180
     if lPlanets[x].e != e_new:
         lPlanets[x].e = e_new
         lPlanets[x].calculate()
@@ -270,16 +259,16 @@ e_scale = Tkinter.Scale(top, from_=0, to=1, resolution =0.01, orient = "horizont
 e_scale.set(lPlanets[0].e)
 e_scale.pack()
 
-i_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "i", length = 250)
-i_scale.set(lPlanets[0].i)
+i_scale = Tkinter.Scale(top, from_=0, to=360, resolution =1, orient = "horizontal", label = "i", length = 250)
+i_scale.set(lPlanets[0].i*180/pi)
 i_scale.pack()
 
-omega_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "omega", length = 250)
-omega_scale.set(lPlanets[0].omega)
+omega_scale = Tkinter.Scale(top, from_=0, to=360, resolution =1, orient = "horizontal", label = "omega", length = 250)
+omega_scale.set(lPlanets[0].omega*180/pi)
 omega_scale.pack()
 
-w_scale = Tkinter.Scale(top, from_=0, to=2*pi, resolution =0.1, orient = "horizontal", label = "w", length = 250)
-w_scale.set(lPlanets[0].w)
+w_scale = Tkinter.Scale(top, from_=0, to=360, resolution =1, orient = "horizontal", label = "w", length = 250)
+w_scale.set(lPlanets[0].w*180/pi)
 w_scale.pack()
 
 
