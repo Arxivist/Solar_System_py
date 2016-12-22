@@ -73,12 +73,6 @@ class planet:
                           -f1.y + a * cos(M0) * ua.y + b * sin(M0) * ub.y,
                           -f1.z + a * cos(M0) * ua.z + b * sin(M0) * ub.z)
 
-        # calculate location of ascending node
-        # ellipse has been rotated such that the semimajor axis is at 0
-        self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
-                               -f1.y + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
-                               -f1.z + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
-
         # Calculate the initial velocity
         # assumptions made: Orbiting Sun, with sun at centre of orbit
         # Calculate speed using v=sqrt(G*M*(2/r-1/a)
@@ -87,41 +81,38 @@ class planet:
         self.vel = norm(-a * sin(M0) * ua + b * cos(M0) * ub) * speed
 
         # display elements, nothing beyond here in the init is required to run
-        self.sphere = sphere(pos=self.pos, radius=self.radius, make_trail=True, color=color.gray(50))
+        self.sphere = sphere(radius=self.radius, make_trail=True, color=color.gray(50))
         self.trail = curve(color=color.red)
         # add label
         self.label = label(pos=self.pos, text=name)
 
         #display the orbit
-        t = np.linspace(0, 2 * pi, num=200)
-        self.orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
-                           y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
-                           z=-f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z,
-                           color=color.orange)
+        self.orbit = curve(color=color.orange)
 
-        self.ref_orbit = curve(x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x,
-                           y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y,
-                           z=-f1.z,
-                           color=color.white)
+        self.ref_orbit = curve(color=color.white)
 
         # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
         f1 = (0,0,0)
         f2 = 2*f2
 
-        self.f1_label = label(pos=f1, text="f1")
-        self.f2_label = label(pos=f2, text="f2")
-        self.f2_point = points(pos=f2, size=5, color=color.green)
-        self.a_disp = curve(pos=[(f2/2),va],color=color.green)
-        self.a_point = points(pos=va, size = 5, color = color.green)
-        self.a_label = label(pos=((va+f2/2)/2), text="a")
+        self.f1_label = label(text="f1")
+        self.f2_label = label(text="f2")
+        self.f2_point = points(size=5, color=color.green)
+        self.a_disp = curve(color=color.green)
+        self.a_point = points(size = 5, color = color.green)
+        self.a_label = label( text="a")
 
         #display semi-minor axis
-        self.b_disp = curve(pos=[(f2/2),vb],color=color.blue)
-        self.b_label = label(pos=(vb+f2/2)/2, text="b")
+        self.b_disp = curve(color=color.blue)
+        self.b_label = label(text="b")
 
         #display ascending node
-        self.asc_node_label = label(pos=self.asc_node, text="A_n")
-        self.asc_node_point = points(pos=self.asc_node, size=10, color=color.green)
+        self.asc_node_label = label( text="A_n")
+        self.asc_node_point = points(size=10, color=color.green)
+
+        # display omega
+        self.omega_disp = curve(color=color.magenta)
+        self.omega_label = label(text="o")
 
         # display axis
         self.x_disp = curve(pos=[f1,(1e11,0,0)], color=color.white)
@@ -188,9 +179,16 @@ class planet:
         self.ref_orbit.y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
         self.ref_orbit.z=-f1.z
 
+        # update curve
+        t = np.linspace(-omega,0 , num=200)
+        self.omega_disp.x = (-f1.x + a * cos(t-w) * ua.x + b * sin(t-w) * ub.x) / 2
+        self.omega_disp.y = (-f1.y + a * cos(t-w) * ua.y + b * sin(t-w) * ub.y) / 2
+        self.omega_disp.z = (-f1.z + a * cos(t-w) * ua.z + b * sin(t-w) * ub.z) / 2
+
+
         # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
-        f1 = (0,0,0)
-        f2 = 2*f2
+        f1 = vector(0,0,0)
+        f2 = vector(2*f2)
 
         # update the locations of the various pieces of information
         self.f1_label.pos = f1
@@ -199,6 +197,8 @@ class planet:
         self.a_disp.pos = [(f2/2),va]
         self.a_point.pos = va
         self.a_label.pos = ((va+f2/2)/2)
+
+
 
         #update semi-minor axis
         self.b_disp.pos=[(f2/2),vb]
