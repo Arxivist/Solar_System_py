@@ -124,13 +124,13 @@ class planet:
         self.w_label = label(text="w")
 
         # display axis
-        self.x_disp = curve(pos=[f1,(1e11,0,0)], color=color.white)
+        self.x_disp = curve(pos=[(0,0,0),(1e11,0,0)], color=color.white)
         self.x_label = label(pos=(1e11,0,0), text="x")
 
-        self.y_disp = curve(pos=[f1, (0,1e11,  0)], color=color.white)
+        self.y_disp = curve(pos=[(0,0,0), (0,1e11,  0)], color=color.white)
         self.y_label = label(pos=(0,1e11,  0), text="y")
 
-        self.z_disp = curve(pos=[f1, ( 0, 0,1e11)], color=color.white)
+        self.z_disp = curve(pos=[(0,0,0), ( 0, 0,1e11)], color=color.white)
         self.z_label = label(pos=(0, 0,1e11), text="z")
 
     def calculate(self):
@@ -150,7 +150,7 @@ class planet:
         # find vector associated with semimajor and semiminor axes
         # find the inclination in z-plane of the semi-major vector
         i_a = asin(sin(i) * sin(w))
-        # find the rotation in the xy plane of the semimajor vector. Equal to omage, plus the value of w projected onto the xy plane.
+        # find the rotation in the xy plane of the semimajor vector. Equal to omega, plus the value of w projected onto the xy plane.
         w_a = atan((sin(w) * cos(i)) / cos(w))
         theta = omega + w_a
         # calculate vector
@@ -171,6 +171,7 @@ class planet:
         # correct for centering around f1
         va -= f1
         vb -= f1
+        cen=-f1
 
         # calculate location of ascending node
         self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
@@ -182,13 +183,13 @@ class planet:
 
         # update the orbit and the reference orbit
         t = np.linspace(0, 2 * pi, num=200)
-        self.orbit.x = -f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x
-        self.orbit.y = -f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
-        self.orbit.z = -f1.z + a * cos(t) * ua.z + b * sin(t) * ub.z
+        self.orbit.x = cen.x + a * cos(t) * ua.x + b * sin(t) * ub.x
+        self.orbit.y = cen.y + a * cos(t) * ua.y + b * sin(t) * ub.y
+        self.orbit.z = cen.z + a * cos(t) * ua.z + b * sin(t) * ub.z
 
-        self.ref_orbit.x=-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x
-        self.ref_orbit.y=-f1.y + a * cos(t) * ua.y + b * sin(t) * ub.y
-        self.ref_orbit.z=-f1.z
+        self.ref_orbit.x=cen.x + a * cos(t) * ua.x + b * sin(t) * ub.x
+        self.ref_orbit.y=cen.y + a * cos(t) * ua.y + b * sin(t) * ub.y
+        self.ref_orbit.z=0
 
         # update omega
         t = np.linspace(-omega,0 , num=200)
@@ -219,8 +220,6 @@ class planet:
         self.a_disp.pos = [(f2/2),va]
         self.a_point.pos = va
         self.a_label.pos = ((va+f2/2)/2)
-
-
 
         #update semi-minor axis
         self.b_disp.pos=[(f2/2),vb]
