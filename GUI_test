@@ -1,3 +1,6 @@
+# Assumptions made:
+# Reference direction is 0
+
 import Tkinter
 import numpy as np
 from visual import *
@@ -173,40 +176,42 @@ class planet:
         vb -= f1
         cen=-f1
 
-        # calculate location of ascending node
-        self.asc_node = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x,
-                               -f1.y + a * cos(-w) * ua.y + b * sin(-w) * ub.y,
-                               -f1.z + a * cos(-w) * ua.z + b * sin(-w) * ub.z)
-
-        # calculate location of reference vector
-        self.vref_label.pos = vector(-f1+ a * cos(-w-omega) * ua + b * sin(-w-omega) * ub)
-
-        # update the orbit and the reference orbit
+        # update the orbit
         t = np.linspace(0, 2 * pi, num=200)
         self.orbit.x = cen.x + a * cos(t) * ua.x + b * sin(t) * ub.x
         self.orbit.y = cen.y + a * cos(t) * ua.y + b * sin(t) * ub.y
         self.orbit.z = cen.z + a * cos(t) * ua.z + b * sin(t) * ub.z
 
+
+        # update reference orbit
         self.ref_orbit.x=cen.x + a * cos(t) * ua.x + b * sin(t) * ub.x
         self.ref_orbit.y=cen.y + a * cos(t) * ua.y + b * sin(t) * ub.y
         self.ref_orbit.z=0
 
         # update omega
-        t = np.linspace(-omega,0 , num=200)
-        self.omega_disp.x = (-f1.x + a * cos(t-w) * ua.x + b * sin(t-w) * ub.x) / 2
-        self.omega_disp.y = (-f1.y + a * cos(t-w) * ua.y + b * sin(t-w) * ub.y) / 2
-        self.omega_disp.z = (-f1.z + a * cos(t-w) * ua.z + b * sin(t-w) * ub.z) / 2
+        t = np.linspace(0,omega , num=200)
+        self.omega_disp.x = 2e10 * cos(t)
+        self.omega_disp.y = 2e10 * sin(t)
+        self.omega_disp.z = 0
+        self.omega_label.x =2e10 * cos(omega/2)
+        self.omega_label.y =2e10 * sin(omega/2)
+        self.omega_label.z =0
 
-
-        self.omega_label.pos = (-f1+ a * cos(-omega/2 - w) * ua + b * sin(-omega/2 - w) * ub) / 2
+        # calculate location of ascending node
+        self.asc_node = vector(a * cos(omega) ,a * sin(omega),0)
 
         # update w
-        t = np.linspace(0, -w, num=200)
-        self.w_disp.x = (-f1.x + a * cos(t) * ua.x + b * sin(t) * ub.x) / 2
-        self.w_disp.y = (-f1.y + a * cos(t ) * ua.y + b * sin(t) * ub.y) / 2
-        self.w_disp.z = (-f1.z + a * cos(t ) * ua.z + b * sin(t) * ub.z) / 2
-
+        t = np.linspace(omega, omega+w, num=200)
+        t0 = np.linspace(0,i_a,num=200)
+        self.w_disp.x = 2e10 * cos(t)*cos(t0)
+        self.w_disp.y = 2e10 * sin(t)*cos(t0)
+        self.w_disp.z = 2e10 * sin(t0)
         self.w_label.pos = (-f1 + a * cos(-w/2) * ua + b * sin(-w/2) * ub) / 2
+
+
+        # calculate location of reference vector, in x direction
+        self.vref_label.pos = vector(-f1.x + a * cos(-w) * ua.x + b * sin(-w) * ub.x, 0,0)
+
 
 
         # above equations have transformed f1 to (0,0,0) anf f2 to 2*f2, need to reflect that.
